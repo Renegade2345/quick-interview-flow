@@ -3,6 +3,7 @@ import { useCandidates } from "@/contexts/CandidateContext";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import CsvUploader from "./CsvUploader";
+import AddCandidateForm from "./AddCandidateForm";
 import SLAStatsCard from "./SLAStatsCard";
 import CandidateList from "./CandidateList";
 
@@ -22,11 +23,14 @@ const AdminPanel = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold mb-2">Admin Panel</h1>
-        <p className="text-muted-foreground">
-          Manage candidates, track SLA performance, and oversee scheduling progress
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">Admin Panel</h1>
+          <p className="text-muted-foreground">
+            Manage candidates, track SLA performance, and oversee scheduling progress
+          </p>
+        </div>
+        <AddCandidateForm />
       </div>
 
       <SLAStatsCard />

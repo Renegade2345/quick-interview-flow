@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCandidates } from "@/contexts/CandidateContext";
 import CandidateList from "./CandidateList";
 import SLAStatsCard from "./SLAStatsCard";
+import AddCandidateForm from "./AddCandidateForm";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -26,13 +27,16 @@ const Dashboard = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold mb-2">
-          {user?.role === "admin" ? "Admin Dashboard" : `${user?.name}'s Dashboard`}
-        </h1>
-        <p className="text-muted-foreground">
-          Track your assigned candidates and interview scheduling progress
-        </p>
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-2xl font-bold mb-2">
+            {user?.role === "admin" ? "Admin Dashboard" : `${user?.name}'s Dashboard`}
+          </h1>
+          <p className="text-muted-foreground">
+            Track your assigned candidates and interview scheduling progress
+          </p>
+        </div>
+        <AddCandidateForm />
       </div>
 
       <SLAStatsCard />
