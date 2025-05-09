@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -61,7 +62,15 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
-				}
+				},
+				// Custom colors for SLA status
+				sla: {
+					'ok': '#10b981',      // Green
+					'warning': '#f59e0b',  // Amber
+					'danger': '#ef4444',   // Red
+				},
+				// Main app color
+				indigo: '#4f46e5',
 			},
 			borderRadius: {
 				lg: 'var(--radius)',
