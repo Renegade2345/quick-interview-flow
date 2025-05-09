@@ -20,9 +20,9 @@ const SLAStatsCard = () => {
   
   // Get color based on percentage
   const getProgressColor = (percentage: number) => {
-    if (percentage >= 80) return "bg-sla-ok";
-    if (percentage >= 50) return "bg-sla-warning";
-    return "bg-sla-danger";
+    if (percentage >= 80) return "bg-green-500";
+    if (percentage >= 50) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
   return (
@@ -56,8 +56,7 @@ const SLAStatsCard = () => {
           </div>
           <Progress 
             value={scheduledPercentage} 
-            className="h-2"
-            indicatorClassName={getProgressColor(scheduledPercentage)} 
+            className={`h-2 ${getProgressColor(scheduledPercentage)}`}
           />
         </CardContent>
       </Card>
@@ -69,7 +68,7 @@ const SLAStatsCard = () => {
               <CardTitle className="text-sm font-medium">On Track</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-sla-ok">{slaStats.onTrack}</div>
+              <div className="text-2xl font-bold text-green-500">{slaStats.onTrack}</div>
             </CardContent>
           </Card>
           
@@ -78,7 +77,7 @@ const SLAStatsCard = () => {
               <CardTitle className="text-sm font-medium">At Risk</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-sla-warning">{slaStats.atRisk}</div>
+              <div className="text-2xl font-bold text-yellow-500">{slaStats.atRisk}</div>
             </CardContent>
           </Card>
           
@@ -87,7 +86,7 @@ const SLAStatsCard = () => {
               <CardTitle className="text-sm font-medium">Breached</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-sla-danger">{slaStats.breached}</div>
+              <div className="text-2xl font-bold text-red-500">{slaStats.breached}</div>
             </CardContent>
           </Card>
           

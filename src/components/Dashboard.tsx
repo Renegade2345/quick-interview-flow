@@ -38,7 +38,7 @@ const Dashboard = () => {
       <SLAStatsCard />
       
       {(atRiskCandidates.length > 0 || breachedCandidates.length > 0) && (
-        <Alert variant={breachedCandidates.length > 0 ? "destructive" : "warning"}>
+        <Alert variant={breachedCandidates.length > 0 ? "destructive" : "default"}>
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Attention Required</AlertTitle>
           <AlertDescription>

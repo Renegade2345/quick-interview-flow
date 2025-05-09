@@ -77,7 +77,10 @@ export const CandidateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             const deadline = new Date(candidate.slaDeadline);
             if (now > deadline) {
               updatedCandidates = true;
-              return { ...candidate, status: 'escalated' };
+              return { 
+                ...candidate, 
+                status: 'escalated' as CandidateStatus // Type assertion to CandidateStatus
+              };
             }
           }
           return candidate;
@@ -131,7 +134,7 @@ export const CandidateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           }
           
           // Auto-escalate after 3 follow-ups
-          const newStatus = followUpCount >= 3 ? 'escalated' : status;
+          const newStatus = followUpCount >= 3 ? 'escalated' as CandidateStatus : status;
           
           // Set scheduledAt timestamp if status is 'scheduled'
           const scheduledAt = newStatus === 'scheduled' ? now : candidate.scheduledAt;
