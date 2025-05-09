@@ -4,6 +4,7 @@ import { useCandidates } from "@/contexts/CandidateContext";
 import CandidateList from "./CandidateList";
 import SLAStatsCard from "./SLAStatsCard";
 import AddCandidateForm from "./AddCandidateForm";
+import InternFileUploader from "./InternFileUploader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
@@ -58,6 +59,12 @@ const Dashboard = () => {
             )}
           </AlertDescription>
         </Alert>
+      )}
+      
+      {user?.role !== "admin" && (
+        <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">
+          <InternFileUploader />
+        </div>
       )}
       
       <CandidateList />
