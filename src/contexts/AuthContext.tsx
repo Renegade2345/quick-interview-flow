@@ -4,7 +4,7 @@ import { AuthState, User } from "@/types";
 import { useToast } from "@/components/ui/use-toast";
 
 interface AuthContextType extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
 }
 
@@ -39,7 +39,7 @@ const MOCK_USERS: User[] = [
 // Create context
 export const AuthContext = createContext<AuthContextType>({
   ...initialState,
-  login: async () => {},
+  login: async () => false,
   logout: () => {},
 });
 
@@ -67,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
   
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     setState({ ...state, loading: true });
     try {
       // In a real app, you would make an API call here
@@ -82,6 +82,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           title: "Logged in successfully",
           description: `Welcome back, ${user.name}!`,
         });
+        return true;
       } else {
         setState({ user: null, loading: false, error: "Invalid credentials" });
         toast({
@@ -89,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           description: "Invalid email or password",
           variant: "destructive",
         });
+        return false;
       }
     } catch (error) {
       setState({ user: null, loading: false, error: "Authentication failed" });
@@ -97,6 +99,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "An error occurred during login",
         variant: "destructive",
       });
+      return false;
     }
   };
   

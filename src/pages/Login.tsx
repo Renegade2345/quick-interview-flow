@@ -1,7 +1,20 @@
 
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import LoginForm from "@/components/LoginForm";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  // If user is already logged in, redirect to home
+  useEffect(() => {
+    if (user) {
+      navigate("/");
+    }
+  }, [user, navigate]);
+
   return (
     <div className="min-h-screen flex flex-col justify-center items-center bg-gray-50 p-4">
       <div className="w-full max-w-md">
