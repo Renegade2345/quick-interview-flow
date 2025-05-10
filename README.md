@@ -3,7 +3,6 @@
 
 A modern, iOS-inspired application for managing candidate interviews and tracking recruitment processes with real-time analytics.
 
-![Interview Management System](https://placeholder.pics/svg/800x400/DEDEDE/555555/Interview%20Management%20System)
 
 ## 📱 Features
 
@@ -116,6 +115,3 @@ The system supports multiple file formats for candidate imports:
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## 🙏 Acknowledgements
-
-Built with [Lovable](https://lovable.dev).
