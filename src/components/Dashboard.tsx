@@ -8,6 +8,8 @@ import InternFileUploader from "./InternFileUploader";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import { getSLAStatus } from "@/utils/slaHelpers";
 
 const Dashboard = () => {
@@ -26,6 +28,15 @@ const Dashboard = () => {
     c => c.status !== 'scheduled' && getSLAStatus(c) === 'danger'
   );
 
+  // Calculate recent contact stats
+  const contactsLast24h = userCandidates.filter(c => {
+    if (!c.lastUpdated) return false;
+    const lastUpdated = new Date(c.lastUpdated);
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return lastUpdated > yesterday;
+  }).length;
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -37,7 +48,12 @@ const Dashboard = () => {
             Track your assigned candidates and interview scheduling progress
           </p>
         </div>
-        <AddCandidateForm />
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link to="/analytics">View Analytics</Link>
+          </Button>
+          <AddCandidateForm />
+        </div>
       </div>
 
       <SLAStatsCard />
@@ -60,6 +76,47 @@ const Dashboard = () => {
           </AlertDescription>
         </Alert>
       )}
+      
+      <div className="grid gap-6 md:grid-cols-3">
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Recent Activity</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{contactsLast24h}</div>
+            <p className="text-xs text-muted-foreground mt-1">Contacts in the last 24 hours</p>
+          </CardContent>
+        </Card>
+          
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Pending Follow-ups</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {userCandidates.filter(c => 
+                c.status === 'follow-up-1' || 
+                c.status === 'follow-up-2'
+              ).length}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Requires your attention</p>
+          </CardContent>
+        </Card>
+          
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium">Scheduling Rate</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">
+              {userCandidates.length > 0 
+                ? `${Math.round((userCandidates.filter(c => c.status === 'scheduled').length / userCandidates.length) * 100)}%`
+                : '0%'}
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">Target: 80%</p>
+          </CardContent>
+        </Card>
+      </div>
       
       {user?.role !== "admin" && (
         <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-1">

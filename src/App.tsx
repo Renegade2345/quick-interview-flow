@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import AdminPage from "./pages/AdminPage";
+import Analytics from "./pages/Analytics";
 import NotFound from "./pages/NotFound";
 import NavBar from "./components/NavBar";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
@@ -58,6 +59,7 @@ const App = () => (
                 <Route path="/login" element={<Login />} />
                 <Route path="/" element={<Index />} />
                 <Route path="/admin" element={<AdminPage />} />
+                <Route path="/analytics" element={<Analytics />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>
