@@ -9,20 +9,26 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 
 const SLAAnalytics = () => {
-  const { candidates, loading, slaStats } = useCandidates();
+  const { candidates, slaStats } = useCandidates();
   const { user } = useAuth();
   const [chartAnimated, setChartAnimated] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Set loading to false after data is ready
+    if (candidates.length > 0 || candidates.length === 0) {
+      setIsLoading(false);
+    }
+    
     // Delay the animation to create a staggered effect
     const timer = setTimeout(() => {
       setChartAnimated(true);
     }, 400);
     
     return () => clearTimeout(timer);
-  }, []);
+  }, [candidates]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-[200px] w-full" />
@@ -36,7 +42,7 @@ const SLAAnalytics = () => {
 
   // Prepare data for pie chart
   const statusData = [
-    { name: 'Initial Contact', value: candidates.filter(c => c.status === 'initial-contact').length },
+    { name: 'Initial Contact', value: candidates.filter(c => c.status === 'pending').length },
     { name: 'Follow-up 1', value: candidates.filter(c => c.status === 'follow-up-1').length },
     { name: 'Follow-up 2', value: candidates.filter(c => c.status === 'follow-up-2').length },
     { name: 'Scheduled', value: candidates.filter(c => c.status === 'scheduled').length },
