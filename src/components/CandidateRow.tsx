@@ -7,17 +7,28 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getSLAStatus, getSLATimeRemaining } from "@/utils/slaHelpers";
 import { useCandidates } from "@/contexts/CandidateContext";
 import { useToast } from "@/components/ui/use-toast";
-import { AlertCircle, Mail, MessageSquare, Phone } from "lucide-react";
+import { AlertCircle, Mail, MessageSquare, Phone, Trash2 } from "lucide-react";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface CandidateRowProps {
   candidate: Candidate;
 }
 
 const CandidateRow = ({ candidate }: CandidateRowProps) => {
-  const { updateCandidateStatus } = useCandidates();
+  const { updateCandidateStatus, deleteCandidate } = useCandidates();
   const { toast } = useToast();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [communicationType, setCommunicationType] = useState<"whatsapp" | "email" | "call" | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   
   const slaStatus = getSLAStatus(candidate);
   const timeRemaining = getSLATimeRemaining(candidate);
@@ -33,6 +44,15 @@ const CandidateRow = ({ candidate }: CandidateRowProps) => {
   const handleCommunication = (type: "whatsapp" | "email" | "call") => {
     setCommunicationType(type);
     setIsDialogOpen(true);
+  };
+  
+  const handleDelete = () => {
+    setIsDeleteDialogOpen(true);
+  };
+  
+  const confirmDelete = () => {
+    deleteCandidate(candidate.id);
+    setIsDeleteDialogOpen(false);
   };
   
   const getTemplateMessage = () => {
@@ -152,6 +172,15 @@ const CandidateRow = ({ candidate }: CandidateRowProps) => {
             <Phone className="h-4 w-4 mr-1" />
             Call
           </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDelete}
+            className="text-red-500 hover:bg-red-50 hover:text-red-600 border-red-200"
+          >
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete
+          </Button>
         </div>
       </td>
       
@@ -208,6 +237,27 @@ const CandidateRow = ({ candidate }: CandidateRowProps) => {
           </div>
         </DialogContent>
       </Dialog>
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirm Deletion</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {candidate.name}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-red-500 text-white hover:bg-red-600"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </tr>
   );
 };

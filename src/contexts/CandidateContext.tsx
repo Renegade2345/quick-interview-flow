@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Candidate, CandidateStatus, SLAStats, User } from '@/types';
 import { useAuth } from './AuthContext';
@@ -11,6 +10,7 @@ interface CandidateContextType {
   updateCandidateStatus: (id: string, status: CandidateStatus) => void;
   filterCandidatesByUser: (user: User | null) => Candidate[];
   slaStats: SLAStats;
+  deleteCandidate: (id: string) => void;
 }
 
 const CandidateContext = createContext<CandidateContextType>({
@@ -18,7 +18,8 @@ const CandidateContext = createContext<CandidateContextType>({
   addCandidates: () => {},
   updateCandidateStatus: () => {},
   filterCandidatesByUser: () => [],
-  slaStats: { total: 0, scheduled: 0, missed: 0, onTrack: 0, atRisk: 0, breached: 0 }
+  slaStats: { total: 0, scheduled: 0, missed: 0, onTrack: 0, atRisk: 0, breached: 0 },
+  deleteCandidate: () => {}
 });
 
 export const CandidateProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -152,6 +153,23 @@ export const CandidateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     );
   };
 
+  // Delete a candidate
+  const deleteCandidate = (id: string) => {
+    setCandidates(prevCandidates => {
+      const candidateToDelete = prevCandidates.find(candidate => candidate.id === id);
+      const filteredCandidates = prevCandidates.filter(candidate => candidate.id !== id);
+      
+      if (candidateToDelete) {
+        toast({
+          title: "Candidate Deleted",
+          description: `${candidateToDelete.name} has been removed from the system.`,
+        });
+      }
+      
+      return filteredCandidates;
+    });
+  };
+
   // Filter candidates based on user role
   const filterCandidatesByUser = (user: User | null): Candidate[] => {
     if (!user) return [];
@@ -169,7 +187,8 @@ export const CandidateProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       addCandidates, 
       updateCandidateStatus,
       filterCandidatesByUser,
-      slaStats
+      slaStats,
+      deleteCandidate
     }}>
       {children}
     </CandidateContext.Provider>
