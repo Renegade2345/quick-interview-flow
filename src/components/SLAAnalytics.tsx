@@ -1,296 +1,290 @@
 
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+import { ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, LineChart, Line } from 'recharts';
 import { useCandidates } from "@/contexts/CandidateContext";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  ChartContainer, 
-  ChartTooltip, 
-  ChartTooltipContent 
-} from "@/components/ui/chart";
-import { getSLAStatus } from "@/utils/slaHelpers";
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  Tooltip, 
-  Legend, 
-  PieChart, 
-  Pie, 
-  Cell
-} from "recharts";
-import { Gauge } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from "react";
 
 const SLAAnalytics = () => {
-  const { candidates, filterCandidatesByUser, slaStats } = useCandidates();
+  const { candidates, loading, slaStats } = useCandidates();
   const { user } = useAuth();
+  const [chartAnimated, setChartAnimated] = useState(false);
 
-  // Get candidates for the current user
-  const userCandidates = filterCandidatesByUser(user);
-  
-  // Colors for charts
-  const COLORS = ['#22c55e', '#eab308', '#ef4444', '#9ca3af'];
-  const STATUS_COLORS = {
-    scheduled: "#22c55e",
-    "follow-up-1": "#64748b",
-    "follow-up-2": "#0ea5e9",
-    pending: "#f59e0b", 
-    escalated: "#ef4444"
-  };
-  
-  // Create data for status chart
-  const statusData = [
-    { name: 'Scheduled', value: userCandidates.filter(c => c.status === 'scheduled').length },
-    { name: 'Follow-up 1', value: userCandidates.filter(c => c.status === 'follow-up-1').length },
-    { name: 'Follow-up 2', value: userCandidates.filter(c => c.status === 'follow-up-2').length },
-    { name: 'Pending', value: userCandidates.filter(c => c.status === 'pending').length },
-    { name: 'Escalated', value: userCandidates.filter(c => c.status === 'escalated').length },
-  ].filter(item => item.value > 0);
-  
-  // Create data for SLA chart
-  const slaData = [
-    { name: 'On Track', value: userCandidates.filter(c => getSLAStatus(c) === 'ok' && c.status !== 'scheduled').length },
-    { name: 'At Risk', value: userCandidates.filter(c => getSLAStatus(c) === 'warning' && c.status !== 'scheduled').length },
-    { name: 'Breached', value: userCandidates.filter(c => getSLAStatus(c) === 'danger' && c.status !== 'scheduled').length },
-    { name: 'Completed', value: userCandidates.filter(c => c.status === 'scheduled').length },
-  ].filter(item => item.value > 0);
+  useEffect(() => {
+    // Delay the animation to create a staggered effect
+    const timer = setTimeout(() => {
+      setChartAnimated(true);
+    }, 400);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
-  // Weekly interview data (past 7 days)
-  const getWeeklyData = () => {
-    const today = new Date();
-    const lastWeek = new Date(today);
-    lastWeek.setDate(lastWeek.getDate() - 7);
-
-    const weeklyData = Array(7).fill(0).map((_, index) => {
-      const date = new Date(today);
-      date.setDate(date.getDate() - (6 - index));
-      
-      // Count scheduled candidates for this day
-      const scheduled = userCandidates.filter(candidate => {
-        if (!candidate.scheduledAt) return false;
-        const scheduledDate = new Date(candidate.scheduledAt);
-        return scheduledDate.toDateString() === date.toDateString();
-      }).length;
-      
-      // Format date as day name (Mon, Tue, etc)
-      const day = date.toLocaleDateString('en-US', { weekday: 'short' });
-      
-      return { name: day, scheduled };
-    });
-
-    return weeklyData;
-  };
-
-  // Contact method stats
-  const contactData = () => {
-    // In a real app, this would come from tracking which contact method was used
-    // For demo purposes, we're generating random distribution
-    return [
-      { name: 'Email', value: Math.floor(userCandidates.length * 0.4) },
-      { name: 'WhatsApp', value: Math.floor(userCandidates.length * 0.35) },
-      { name: 'Call', value: Math.floor(userCandidates.length * 0.25) }
-    ];
-  };
-
-  // Custom tooltip for charts
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-background p-2 border border-border rounded shadow-md">
-          <p className="font-medium">{`${payload[0].name} : ${payload[0].value}`}</p>
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-[200px] w-full" />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Skeleton className="h-[300px]" />
+          <Skeleton className="h-[300px]" />
         </div>
-      );
-    }
-    return null;
-  };
-
-  const renderChartSection = () => {
-    if (userCandidates.length === 0) {
-      return (
-        <Card className="col-span-2">
-          <CardHeader className="pb-2">
-            <CardTitle>No Data Available</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex flex-col items-center justify-center text-muted-foreground">
-            <Gauge className="w-12 h-12 mb-2 opacity-20" />
-            <p>Add candidates to see analytics data</p>
-          </CardContent>
-        </Card>
-      );
-    }
-
-    return (
-      <>
-        <Card>
-          <CardHeader className="pb-1">
-            <CardTitle className="text-lg">Candidate Status Distribution</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center">
-            <ChartContainer
-              config={{
-                status: { theme: { light: "#64748b", dark: "#94a3b8" } }
-              }}
-            >
-              <PieChart width={250} height={250}>
-                <Pie
-                  data={statusData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  nameKey="name"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                >
-                  {statusData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={
-                        STATUS_COLORS[entry.name.toLowerCase().replace(' ', '-').replace(' ', '-') as keyof typeof STATUS_COLORS] || 
-                        COLORS[index % COLORS.length]
-                      }
-                    />
-                  ))}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-1">
-            <CardTitle className="text-lg">SLA Performance</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center">
-            <ChartContainer
-              config={{
-                sla: { theme: { light: "#64748b", dark: "#94a3b8" } }
-              }}
-            >
-              <PieChart width={250} height={250}>
-                <Pie
-                  data={slaData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                  nameKey="name"
-                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                >
-                  {slaData.map((entry, index) => {
-                    let color;
-                    switch (entry.name) {
-                      case 'On Track': color = '#22c55e'; break;
-                      case 'At Risk': color = '#eab308'; break;
-                      case 'Breached': color = '#ef4444'; break;
-                      case 'Completed': color = '#9ca3af'; break;
-                      default: color = COLORS[index % COLORS.length];
-                    }
-                    return <Cell key={`cell-${index}`} fill={color} />;
-                  })}
-                </Pie>
-                <Tooltip content={<CustomTooltip />} />
-              </PieChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        <Card className="col-span-2">
-          <CardHeader className="pb-1">
-            <CardTitle className="text-lg">Interviews Scheduled (Last 7 Days)</CardTitle>
-          </CardHeader>
-          <CardContent className="h-[300px] flex items-center justify-center">
-            <ChartContainer
-              config={{
-                scheduled: { theme: { light: "#22c55e", dark: "#4ade80" } }
-              }}
-              className="w-full max-w-lg"
-            >
-              <BarChart
-                width={500}
-                height={250}
-                data={getWeeklyData()}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Bar dataKey="scheduled" fill="#22c55e" name="Scheduled" />
-              </BarChart>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </>
-    );
-  };
-
-  const renderMetricCards = () => {
-    return (
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Total Contacts Made</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {userCandidates.filter(c => c.status !== 'pending').length}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {userCandidates.length > 0 
-                ? `${Math.round((userCandidates.filter(c => c.status !== 'pending').length / userCandidates.length) * 100)}% of candidates`
-                : '0% of candidates'}
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Average Response Time</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {/* In a real app, this would be calculated from actual data */}
-              {userCandidates.length > 0 ? '1.2 days' : 'N/A'}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              From first contact to scheduling
-            </p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium">Scheduling Rate</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {userCandidates.length > 0 
-                ? `${Math.round((userCandidates.filter(c => c.status === 'scheduled').length / userCandidates.length) * 100)}%`
-                : '0%'}
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              Target: 80%
-            </p>
-          </CardContent>
-        </Card>
       </div>
     );
-  };
+  }
+
+  // Prepare data for pie chart
+  const statusData = [
+    { name: 'Initial Contact', value: candidates.filter(c => c.status === 'initial-contact').length },
+    { name: 'Follow-up 1', value: candidates.filter(c => c.status === 'follow-up-1').length },
+    { name: 'Follow-up 2', value: candidates.filter(c => c.status === 'follow-up-2').length },
+    { name: 'Scheduled', value: candidates.filter(c => c.status === 'scheduled').length },
+  ];
+
+  // Prepare data for SLA bar chart
+  const slaData = [
+    { name: 'On Track', value: slaStats.onTrack, color: '#34C759' }, // iOS Green
+    { name: 'At Risk', value: slaStats.atRisk, color: '#FF9500' },   // iOS Orange
+    { name: 'Breached', value: slaStats.breached, color: '#FF3B30' }, // iOS Red
+  ];
+
+  // Trend data (mocked for now, could be replaced with real data)
+  const trendData = [
+    { name: 'Week 1', scheduled: 5, contacted: 12 },
+    { name: 'Week 2', scheduled: 8, contacted: 15 },
+    { name: 'Week 3', scheduled: 12, contacted: 20 },
+    { name: 'Week 4', scheduled: 15, contacted: 18 },
+    { name: 'Week 5', scheduled: 20, contacted: 25 },
+  ];
+
+  // Mock data for contact method distribution
+  const contactData = [
+    { name: 'Email', value: 65 },
+    { name: 'Phone', value: 20 },
+    { name: 'LinkedIn', value: 15 },
+  ];
+
+  // Colors for status pie chart (iOS colors)
+  const COLORS = ['#007AFF', '#5AC8FA', '#34C759', '#AF52DE'];
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold mb-4">Analytics Dashboard</h2>
-      
-      {renderMetricCards()}
-      
-      <div className="grid gap-6 md:grid-cols-2">
-        {renderChartSection()}
-      </div>
+    <div className={`space-y-6 ${chartAnimated ? 'animate-fade-in' : 'opacity-0'}`}>
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4 rounded-xl">
+          <TabsTrigger value="overview" className="rounded-lg text-ios-blue data-[state=active]:bg-ios-blue data-[state=active]:text-white">Overview</TabsTrigger>
+          <TabsTrigger value="sla" className="rounded-lg text-ios-blue data-[state=active]:bg-ios-blue data-[state=active]:text-white">SLA Metrics</TabsTrigger>
+          <TabsTrigger value="trends" className="rounded-lg text-ios-blue data-[state=active]:bg-ios-blue data-[state=active]:text-white">Trends</TabsTrigger>
+          <TabsTrigger value="contact" className="rounded-lg text-ios-blue data-[state=active]:bg-ios-blue data-[state=active]:text-white">Contact Info</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="ios-card">
+              <CardHeader>
+                <CardTitle>Candidate Status</CardTitle>
+                <CardDescription>Distribution of candidates by current status</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={statusData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                    >
+                      {statusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            <Card className="ios-card">
+              <CardHeader>
+                <CardTitle>SLA Status</CardTitle>
+                <CardDescription>Current SLA compliance metrics</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={slaData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" name="Candidates" radius={[4, 4, 0, 0]}>
+                      {slaData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="mt-6">
+            <Card className="ios-card">
+              <CardHeader>
+                <CardTitle>Summary</CardTitle>
+                <CardDescription>Key statistics for {user?.role === 'admin' ? 'all recruiters' : user?.name}</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center">
+                    <span className="text-sm text-gray-500">Total Candidates</span>
+                    <span className="text-2xl font-bold text-ios-blue">{candidates.length}</span>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center">
+                    <span className="text-sm text-gray-500">Scheduled</span>
+                    <span className="text-2xl font-bold text-ios-green">
+                      {candidates.filter(c => c.status === 'scheduled').length}
+                    </span>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center">
+                    <span className="text-sm text-gray-500">Need Follow-up</span>
+                    <span className="text-2xl font-bold text-ios-orange">
+                      {candidates.filter(c => c.status === 'follow-up-1' || c.status === 'follow-up-2').length}
+                    </span>
+                  </div>
+                  <div className="bg-gray-50 p-4 rounded-xl flex flex-col items-center justify-center">
+                    <span className="text-sm text-gray-500">SLA Compliant</span>
+                    <span className="text-2xl font-bold text-ios-purple">
+                      {Math.round((slaStats.onTrack / (candidates.length || 1)) * 100)}%
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sla" className="pt-6">
+          <Card className="ios-card">
+            <CardHeader>
+              <CardTitle>SLA Analysis</CardTitle>
+              <CardDescription>Detailed breakdown of SLA performance</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={slaData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="value" name="Candidates" radius={[4, 4, 0, 0]}>
+                      {slaData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+
+                <Separator />
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-3">SLA Definitions</h3>
+                  <ul className="space-y-2">
+                    <li className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-ios-green mr-2"></div>
+                      <span><strong>On Track</strong>: Contact made within specified timeframe</span>
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-ios-orange mr-2"></div>
+                      <span><strong>At Risk</strong>: Approaching SLA deadline (within 24 hours)</span>
+                    </li>
+                    <li className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-ios-red mr-2"></div>
+                      <span><strong>Breached</strong>: SLA deadline has passed without contact</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="trends" className="pt-6">
+          <Card className="ios-card">
+            <CardHeader>
+              <CardTitle>Scheduling Trends</CardTitle>
+              <CardDescription>Weekly progression of candidate contacts and scheduled interviews</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <LineChart data={trendData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="name" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Line type="monotone" dataKey="scheduled" stroke="#34C759" strokeWidth={2} activeDot={{ r: 8 }} />
+                  <Line type="monotone" dataKey="contacted" stroke="#007AFF" strokeWidth={2} />
+                </LineChart>
+              </ResponsiveContainer>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="contact" className="pt-6">
+          <Card className="ios-card">
+            <CardHeader>
+              <CardTitle>Contact Method Analysis</CardTitle>
+              <CardDescription>Distribution of preferred contact methods</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ResponsiveContainer width="100%" height={300}>
+                <PieChart>
+                  <Pie
+                    data={contactData}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={true}
+                    outerRadius={100}
+                    fill="#8884d8"
+                    dataKey="value"
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                  >
+                    {contactData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={['#007AFF', '#FF9500', '#AF52DE'][index % 3]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-3">Contact Recommendations</h3>
+                <ul className="space-y-2">
+                  <li className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-ios-blue mr-2"></div>
+                    <span><strong>Email</strong>: Best for initial outreach and scheduling confirmations</span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-ios-orange mr-2"></div>
+                    <span><strong>Phone</strong>: Recommended for follow-ups and urgent communications</span>
+                  </li>
+                  <li className="flex items-center">
+                    <div className="w-3 h-3 rounded-full bg-ios-purple mr-2"></div>
+                    <span><strong>LinkedIn</strong>: Effective for professional networking and passive candidates</span>
+                  </li>
+                </ul>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

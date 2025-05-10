@@ -20,10 +20,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const { user } = useAuth();
   
   return (
-    <>
+    <div className="min-h-screen bg-ios-background">
       {user && <NavBar />}
-      <main>{children}</main>
-    </>
+      <main className="animate-fade-in">{children}</main>
+    </div>
   );
 };
 
@@ -34,7 +34,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-ios-blue"></div>
       </div>
     );
   }
@@ -57,9 +57,30 @@ const App = () => (
             <Layout>
               <Routes>
                 <Route path="/login" element={<Login />} />
-                <Route path="/" element={<Index />} />
-                <Route path="/admin" element={<AdminPage />} />
-                <Route path="/analytics" element={<Analytics />} />
+                <Route 
+                  path="/" 
+                  element={
+                    <ProtectedRoute>
+                      <Index />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute>
+                      <AdminPage />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/analytics" 
+                  element={
+                    <ProtectedRoute>
+                      <Analytics />
+                    </ProtectedRoute>
+                  } 
+                />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>
